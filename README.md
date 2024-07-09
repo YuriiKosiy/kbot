@@ -36,7 +36,7 @@ To install and run this bot on your own system, follow these steps:
 
 3. Edit the config.json file to include your tokens:
      ```sh
-    "telegram_token": "YOUR_TELE_TOKEN",
+    "TELE_TOKEN": "YOUR_TELE_TOKEN",
     "openweather_api_key": "YOUR_OPENWEATHER_API_KEY"
 
 ### How to Get a Telegram Bot Token
