@@ -1,0 +1,4 @@
+{
+    "telegram_token": "YOUR_TELEGRAM_BOT_TOKEN",
+    "openweather_api_key": "YOUR_OPENWEATHERMAP_API_KEY"
+}
