@@ -16,7 +16,7 @@ import (
 
 // Config
 type Config struct {
-	TelegramToken     string `json:"telegram_token"`
+	TelegramToken     string `json:"TELE_TOKEN"`
 	OpenWeatherAPIKey string `json:"openweather_api_key"`
 }
 
@@ -76,7 +76,7 @@ to quickly create a Cobra application.`,
 		})
 
 		if err != nil {
-			log.Fatalf("Please check TELEGRAM_TOKEN in config file. %s", err)
+			log.Fatalf("Please check TELE_TOKEN in config file. %s", err)
 			return
 		}
 

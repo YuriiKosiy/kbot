@@ -36,14 +36,14 @@ To install and run this bot on your own system, follow these steps:
 
 3. Edit the config.json file to include your tokens:
      ```sh
-    "telegram_token": "YOUR_TELEGRAM_BOT_TOKEN",
+    "telegram_token": "YOUR_TELE_TOKEN",
     "openweather_api_key": "YOUR_OPENWEATHER_API_KEY"
 
 ### How to Get a Telegram Bot Token
 
 1. Open Telegram and search for BotFather.
 2. Create a new bot by following BotFather's instructions.
-3. Obtain your bot token from BotFather and paste it into the config.json file instead "YOUR_TELEGRAM_BOT_TOKEN".
+3. Obtain your bot token from BotFather and paste it into the config.json file instead "YOUR_TELE_TOKEN".
 
 ### How to Get an OpenWeatherMap API Key
 
