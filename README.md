@@ -55,5 +55,16 @@ To install and run this bot on your own system, follow these steps:
 
    ```sh
    ./kbot start
-   
+
+### Build kbot (from Makefile)
+
+   ```sh
+   make build
+   ./kbot start
+
+### Docker build (Dockerfile)
+
+   ```sh
+   docker build .
+   docker run sha256:<image sha256 from last step docker build>
 
