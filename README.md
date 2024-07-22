@@ -53,4 +53,7 @@ To install and run this bot on your own system, follow these steps:
 
 ### Run your bot
 
+   ```sh
+   ./kbot start
+   
 
