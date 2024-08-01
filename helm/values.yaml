@@ -8,7 +8,7 @@ image:
   repository: YuriiKosiy
   # Overrides the image tag whose default is the chart appVersion.
   tag: "kbot v1.0.10-a69ac60"
-
+  arch: amd64
 secret:
   name: "kbot"
   env: "TELE_TOKEN"
