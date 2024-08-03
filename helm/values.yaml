@@ -4,7 +4,7 @@
 
 replicaCount: 1
 image:
-  repository: YuriiKosiy
+  repository: ghcr.io/yuriikosiy/kbot
   # Overrides the image tag whose default is the chart appVersion.
   tag: "v1.0.11-20ced5b"
   arch: amd64
@@ -14,3 +14,14 @@ secret:
   key: "token"
 securityContext:
   privileged: true
+service:
+  type: ClusterIP
+  port: 8080
+
+resources:
+  limits:
+    cpu: 100m
+    memory: 128Mi
+  requests:
+    cpu: 50m
+    memory: 64Mi

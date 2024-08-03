@@ -23,7 +23,10 @@ image:
 	docker build . -t ${REGISTRY}/${APP}:${VERSION}-${TARGETOS}-${TARGETARCH}
 
 push:
-	docker build . -t ${REGISTRY}/${APP}:${VERSION}-${TARGETOS}-${TARGETARCH}
+	docker push ${REGISTRY}/${APP}:${VERSION}-${TARGETOS}-${TARGETARCH}
+
+deploy: 
+	helm upgrade --install ${APP} ./helm --namespace default --set image.repository=${REGISTRY}/${APP} --set image.tag=${VERSION}-${TARGETOS}-${TARGETARCH}
 
 clean:
 	rm -rf kbot
