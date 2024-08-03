@@ -3,11 +3,10 @@
 # Declare variables to be passed into your templates.
 
 replicaCount: 1
-
 image:
   repository: YuriiKosiy
   # Overrides the image tag whose default is the chart appVersion.
-  tag: "kbot v1.0.10-a69ac60"
+  tag: "v1.0.11-20ced5b"
   arch: amd64
 secret:
   name: "kbot"
