@@ -54,5 +54,5 @@ jobs:
         git push 
     
     - name: Deploy to Kubernetes with ArgoCD
-        run: |
+      run: |
           argocd app sync kbot --namespace default  
