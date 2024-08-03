@@ -53,6 +53,3 @@ jobs:
         git commit -m "Updated Helm chart with new image tag $VERSION-linux-amd64"
         git push 
     
-    - name: Deploy to Kubernetes with ArgoCD
-      run: |
-        argocd app sync kbot --namespace default  
