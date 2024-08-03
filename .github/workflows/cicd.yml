@@ -55,4 +55,4 @@ jobs:
     
     - name: Deploy to Kubernetes with ArgoCD
       run: |
-          argocd app sync kbot --namespace default  
+        argocd app sync kbot --namespace default  
