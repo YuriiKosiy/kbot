@@ -89,7 +89,7 @@ install_gitleaks() {
 # Run gitleaks to check for secrets
 run_gitleaks() {
     echo "Running Gitleaks..."
-    gitleaks detect --source . --config .gitleaks.toml --no-git --verbose
+    gitleaks protect --source . --config .gitleaks.toml --verbose
     if [ $? -ne 0 ]; then
         echo "Gitleaks detected potential secrets in the code. Commit rejected."
         exit 1
