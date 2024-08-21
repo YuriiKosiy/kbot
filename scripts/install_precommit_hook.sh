@@ -1,6 +1,6 @@
 #!/bin/bash
 
-# Directory of the script1
+# Directory of the script
 SCRIPT_DIR=$(dirname "$0")
 
 # Destination for the pre-commit hook
