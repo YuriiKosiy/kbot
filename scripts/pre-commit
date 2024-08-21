@@ -1,0 +1,109 @@
+#!/bin/bash
+
+# Git pre-commit hook script with Gitleaks for Kbot, Task 8.1
+
+# Check if gitleaks is installed, if not, install it
+install_gitleaks() {
+    if ! command -v gitleaks &> /dev/null
+    then
+        echo "Gitleaks is not installed. Installing..."
+        ARCH=""
+        OS=$(uname -s)
+        INSTALL_DIR="$HOME/.local/bin"
+        case "$OS" in
+            Linux)
+                ARCH=$(uname -m)
+                case "$ARCH" in
+                    x86_64)
+                        URL="https://github.com/gitleaks/gitleaks/releases/download/v8.18.4/gitleaks_8.18.4_linux_x64.tar.gz"
+                        ;;
+                    arm64)
+                        URL="https://github.com/gitleaks/gitleaks/releases/download/v8.18.4/gitleaks_8.18.4_linux_arm64.tar.gz"
+                        ;;
+                    armv6l)
+                        URL="https://github.com/gitleaks/gitleaks/releases/download/v8.18.4/gitleaks_8.18.4_linux_armv6.tar.gz"
+                        ;;
+                    armv7l)
+                        URL="https://github.com/gitleaks/gitleaks/releases/download/v8.18.4/gitleaks_8.18.4_linux_armv7.tar.gz"
+                        ;;
+                    i686)
+                        URL="https://github.com/gitleaks/gitleaks/releases/download/v8.18.4/gitleaks_8.18.4_linux_x32.tar.gz"
+                        ;;
+                    *)
+                        echo "Unsupported Linux architecture. Please install Gitleaks manually."
+                        exit 1
+                        ;;
+                esac
+                ;;
+            Darwin)
+                ARCH=$(uname -m)
+                case "$ARCH" in
+                    x86_64)
+                        URL="https://github.com/gitleaks/gitleaks/releases/download/v8.18.4/gitleaks_8.18.4_darwin_x64.tar.gz"
+                        ;;
+                    arm64)
+                        URL="https://github.com/gitleaks/gitleaks/releases/download/v8.18.4/gitleaks_8.18.4_darwin_arm64.tar.gz"
+                        ;;
+                    *)
+                        echo "Unsupported macOS architecture. Please install Gitleaks manually."
+                        exit 1
+                        ;;
+                esac
+                ;;
+            *)
+                echo "Unsupported OS. Please install Gitleaks manually."
+                exit 1
+                ;;
+        esac
+
+        # Download and install Gitleaks
+        curl -sSfL "$URL" -o gitleaks.tar.gz
+
+        # Check if the download was successful
+        if [ $? -ne 0 ]; then
+            echo "Failed to download Gitleaks. Commit rejected."
+            exit 1
+        fi
+
+        # Create the install directory if it doesn't exist
+        mkdir -p "$INSTALL_DIR"
+
+        # Extract the tar.gz file to the local bin directory
+        tar -xzvf gitleaks.tar.gz -C "$INSTALL_DIR" gitleaks
+
+        # Clean up
+        rm gitleaks.tar.gz
+
+        # Add to PATH if not already in PATH
+        if [[ ":$PATH:" != *":$INSTALL_DIR:"* ]]; then
+            export PATH="$INSTALL_DIR:$PATH"
+        fi
+
+        if ! command -v gitleaks &> /dev/null; then
+            echo "Failed to install Gitleaks. Commit rejected."
+            exit 1
+        fi
+    fi
+}
+
+# Run gitleaks to check for secrets
+run_gitleaks() {
+    echo "Running Gitleaks..."
+    gitleaks detect --source . --config .gitleaks.toml --no-git --verbose
+    if [ $? -ne 0 ]; then
+        echo "Gitleaks detected potential secrets in the code. Commit rejected."
+        exit 1
+    else
+        echo "No secrets detected. Proceeding with commit."
+    fi
+}
+
+# Check if the hook is enabled via git config
+HOOK_ENABLED=$(git config --get hooks.gitleaks)
+
+if [ "$HOOK_ENABLED" == "true" ]; then
+    install_gitleaks
+    run_gitleaks
+else
+    echo "Gitleaks hook is disabled. Enable it with 'git config hooks.gitleaks true'."
+fi
