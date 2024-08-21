@@ -7,7 +7,7 @@ TARGETARCH=amd64
 format:
 	gofmt -s -w ./
 
-lint: 
+lint:
 	golint
 
 test:
@@ -25,7 +25,7 @@ image:
 push:
 	docker push ${REGISTRY}/${APP}:${VERSION}-${TARGETOS}-${TARGETARCH}
 
-deploy: 
+deploy:
 	helm upgrade --install ${APP} ./helm --namespace default --set image.repository=${REGISTRY}/${APP} --set image.tag=${VERSION}-${TARGETOS}-${TARGETARCH}
 
 clean:

@@ -52,7 +52,7 @@ To install and run this bot on your own system, follow these steps:
 3. Paste your API key into the config.json file instead "YOUR_OPENWEATHERMAP_API_KEY".
 
 ## Run your bot
-   ```sh 
+   ```sh
    ./kbot start
    ```
 
@@ -67,4 +67,3 @@ To install and run this bot on your own system, follow these steps:
    docker build .
    docker run sha256:<image sha256 from last step docker build>
    ```
-

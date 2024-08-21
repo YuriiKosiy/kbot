@@ -4,7 +4,7 @@ on:
   push:
    branches:
      - develop
-  
+
 jobs:
   ci:
     name: CI
@@ -13,7 +13,7 @@ jobs:
     steps:
         - name: Checkout
           uses: actions/checkout@v3
-          with: 
+          with:
             fetch-depth: 0
 
         - name: Run test
@@ -30,13 +30,13 @@ jobs:
             username: ${{ github.actor }}
             password: ${{ secrets.GITHUB_TOKEN }}
         - name: Build & Push Docker image
-          env: 
+          env:
             APP: "kbot"
             REGISTRY: ghcr.io/yuriikosiy
             VERSION: $(git describe --tags --abbrev=0)-$(git rev-parse --short HEAD)
           run: make image push
 
-  cd: 
+  cd:
     name: CD
     needs: ci
     runs-on: ubuntu-latest
@@ -49,13 +49,12 @@ jobs:
     - run: echo "VERSION=$(git describe --tags --abbrev=0)-$(git rev-parse --short HEAD)" >> $GITHUB_ENV
 
     - uses: mikefarah/yq@master
-      with: 
+      with:
         cmd: yq -i '.image.tag=strenv(VERSION)' helm/values.yaml
 
-    - run: | 
+    - run: |
         git config user.name github-actions
         git config user.email github-actions@github.com
         git add helm/values.yaml
         git commit -m "Updated Helm chart with new image tag $VERSION-linux-amd64"
-        git push 
-    
+        git push
