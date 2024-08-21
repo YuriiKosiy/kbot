@@ -1,0 +1,14 @@
+title = "kbot Gitleaks config"
+[[rules]]
+id = "telegram-bot-token"
+description = "Telegram Bot Token"
+regex = '''"TELE_TOKEN":\s*"[0-9]+:[A-Za-z0-9_-]+"'''
+secret_group = 1
+tags = ["apikey"]
+
+[[rules]]
+id = "openweather-api-key"
+description = "OpenWeather API Key"
+regex = '''"openweather_api_key":\s*"[a-f0-9]{32}"'''
+secret_group = 1
+tags = ["apikey"]
