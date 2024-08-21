@@ -112,7 +112,7 @@ to quickly create a Cobra application.`,
 			}
 			return err
 		})
-
+		7391391334:AAHLEV8v28s8iGrstWf8z8mTc85xihgKRnI
 		// help
 		kbot.Handle("/help", func(m telebot.Context) error {
 			helpText := `Available commands:
