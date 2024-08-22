@@ -5,7 +5,7 @@
 replicaCount: 1
 image:
   repository: "yuriikosiy"
-  tag: "v1.0.11-22f043f"
+  tag: "v1.0.11-9dd09d1"
   os: linux
   arch: amd64
 secret:
