@@ -4,8 +4,7 @@
 
 replicaCount: 1
 image:
-  registry: "ghcr.io"
-  repository: "yuriikosiy/kbot"
+  repository: "yuriikosiy"
   tag: "v1.0.11-22f043f"
   os: linux
   arch: amd64

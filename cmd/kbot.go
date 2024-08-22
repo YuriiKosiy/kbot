@@ -16,7 +16,7 @@ import (
 
 // Config
 type Config struct {
-	TelegramToken     string `json:"TELE_TOKEN"`
+	//	TelegramToken     string `json:"TELE_TOKEN"`
 	OpenWeatherAPIKey string `json:"openweather_api_key"`
 }
 
@@ -48,6 +48,8 @@ var (
 		sync.RWMutex
 		sessions map[int64]*UserSession
 	}{sessions: make(map[int64]*UserSession)}
+	// TeleToken bot
+	TelegramToken = os.Getenv("TELE_TOKEN")
 )
 
 var kbotCmd = &cobra.Command{
@@ -71,7 +73,7 @@ to quickly create a Cobra application.`,
 
 		kbot, err := telebot.NewBot(telebot.Settings{
 			URL:    "",
-			Token:  config.TelegramToken,
+			Token:  TelegramToken,
 			Poller: &telebot.LongPoller{Timeout: 10 * time.Second},
 		})
 
