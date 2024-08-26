@@ -35,13 +35,16 @@ jobs:
             REGISTRY: ghcr.io/yuriikosiy
             VERSION: $(git describe --tags --abbrev=0)-$(git rev-parse --short HEAD)
           run: make image push
+        - name: Set VERSION
+            run: echo "VERSION=$(git describe --tags --abbrev=0)-$(git rev-parse --short HEAD)" >> $GITHUB_ENV
         - name: Build & Push Docker image to Docker Hub
-          env:
-            APP: "kbot"
-            VERSION: $(git describe --tags --abbrev=0)-$(git rev-parse --short HEAD)
-          run: |
-            docker build -t ${DOCKERHUB_USERNAME}/${APP}:${VERSION} .
-            docker push ${DOCKERHUB_USERNAME}/${APP}:${VERSION}
+            env:
+              APP: "kbot"
+              VERSION: ${{ env.VERSION }}
+              DOCKERHUB_USERNAME: ${{ secrets.DOCKERHUB_USERNAME }}
+            run: |
+              docker build -t ${DOCKERHUB_USERNAME}/${APP}:${VERSION} .
+              docker push ${DOCKERHUB_USERNAME}/${APP}:${VERSION}
           
 
   cd:
