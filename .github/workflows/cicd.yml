@@ -43,8 +43,8 @@ jobs:
             VERSION: ${{ env.VERSION }}
             DOCKERHUB_USERNAME: ${{ secrets.DOCKERHUB_USERNAME }}
           run: |
-            docker build -t ${DOCKERHUB_USERNAME}/${APP}:${VERSION}-linux-amd64 .
-            docker push ${DOCKERHUB_USERNAME}/${APP}:${VERSION}-linux-amd64
+            docker build -t ${DOCKERHUB_USERNAME}/${APP}:${VERSION}-amd64 .
+            docker push ${DOCKERHUB_USERNAME}/${APP}:${VERSION}-amd64
           
 
   cd:
