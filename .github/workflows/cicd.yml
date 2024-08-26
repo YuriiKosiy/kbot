@@ -35,6 +35,14 @@ jobs:
             REGISTRY: ghcr.io/yuriikosiy
             VERSION: $(git describe --tags --abbrev=0)-$(git rev-parse --short HEAD)
           run: make image push
+        - name: Build & Push Docker image to Docker Hub
+          env:
+            APP: "kbot"
+            VERSION: $(git describe --tags --abbrev=0)-$(git rev-parse --short HEAD)
+          run: |
+            docker build -t ${DOCKERHUB_USERNAME}/${APP}:${VERSION} .
+            docker push ${DOCKERHUB_USERNAME}/${APP}:${VERSION}
+          
 
   cd:
     name: CD
