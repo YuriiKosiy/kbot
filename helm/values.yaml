@@ -4,8 +4,8 @@
 
 replicaCount: 1
 image:
-  registry: "docker.io"
-  repository: "yuriikosiy/kbot"
+  registry: "ghcr.io"
+  repository: "YuriiKosiy/kbot"
   tag: "v1.0.12-e2521e8"
   os: linux
   arch: amd64
