@@ -36,7 +36,7 @@ jobs:
             VERSION: $(git describe --tags --abbrev=0)-$(git rev-parse --short HEAD)
           run: make image push
         - name: Set VERSION
-            run: echo "VERSION=$(git describe --tags --abbrev=0)-$(git rev-parse --short HEAD)" >> $GITHUB_ENV
+          run: echo "VERSION=$(git describe --tags --abbrev=0)-$(git rev-parse --short HEAD)" >> $GITHUB_ENV
         - name: Build & Push Docker image to Docker Hub
           env:
             APP: "kbot"
