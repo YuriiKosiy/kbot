@@ -17,7 +17,7 @@ import (
 // Config
 type Config struct {
 	//	TelegramToken     string `json:"TELE_TOKEN"`
-	OpenWeatherAPIKey string `json:"openweather_api_key"`
+	// OpenWeatherAPIKey string `json:"openweather_api_key"`
 }
 
 // loadConfig from config.json
@@ -49,7 +49,8 @@ var (
 		sessions map[int64]*UserSession
 	}{sessions: make(map[int64]*UserSession)}
 	// TeleToken bot
-	TelegramToken = os.Getenv("TELE_TOKEN")
+	TelegramToken     = os.Getenv("TELE_TOKEN")
+	OpenWeatherAPIKey = os.Getenv("openweather_api_key")
 )
 
 var kbotCmd = &cobra.Command{
@@ -65,12 +66,6 @@ to quickly create a Cobra application.`,
 	Run: func(cmd *cobra.Command, args []string) {
 
 		fmt.Printf("kbot %s started", appVersion)
-
-		config, err := loadConfig()
-		if err != nil {
-			log.Fatalf("Failed to load config: %s", err)
-			return
-		}
 
 		kbot, err := telebot.NewBot(telebot.Settings{
 			URL:    "",
@@ -97,7 +92,7 @@ to quickly create a Cobra application.`,
 				if city == "" {
 					return m.Send("Please provide a valid city name.")
 				}
-				weatherInfo, err := getWeatherInfo(config.OpenWeatherAPIKey, city)
+				weatherInfo, err := getWeatherInfo(OpenWeatherAPIKey, city)
 				if err != nil {
 					return m.Send(fmt.Sprintf("Failed to get weather information: %s", err))
 				}
