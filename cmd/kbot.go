@@ -14,29 +14,6 @@ import (
 	telebot "gopkg.in/telebot.v3"
 )
 
-// Config
-type Config struct {
-	//	TelegramToken     string `json:"TELE_TOKEN"`
-	// OpenWeatherAPIKey string `json:"openweather_api_key"`
-}
-
-// loadConfig from config.json
-func loadConfig() (*Config, error) {
-	file, err := os.Open("config.json")
-	if err != nil {
-		return nil, err
-	}
-	defer file.Close()
-
-	decoder := json.NewDecoder(file)
-	config := &Config{}
-	err = decoder.Decode(config)
-	if err != nil {
-		return nil, err
-	}
-	return config, nil
-}
-
 // UserSession
 type UserSession struct {
 	AwaitingCity bool
@@ -48,56 +25,52 @@ var (
 		sync.RWMutex
 		sessions map[int64]*UserSession
 	}{sessions: make(map[int64]*UserSession)}
-	// TeleToken bot
+
+	// Environment variables
 	TelegramToken     = os.Getenv("TELE_TOKEN")
 	OpenWeatherAPIKey = os.Getenv("openweather_api_key")
 )
 
 var kbotCmd = &cobra.Command{
-	Use:        "kbot",
-	Aliases:    []string{"start"},
-	SuggestFor: []string{},
-	Short:      "A brief description of your command",
-	GroupID:    "",
+	Use:     "kbot",
+	Aliases: []string{"start"},
+	Short:   "A brief description of your command",
 	Long: `A longer description that spans multiple lines and likely contains examples
 and usage of using your command. For example:
+
 Cobra is a CLI library for Go that empowers applications.
 This application is a tool to generate the needed files
 to quickly create a Cobra application.`,
-	Example:   "",
-	ValidArgs: []string{},
-	ValidArgsFunction: func(cmd *cobra.Command, args []string, toComplete string) ([]string, cobra.ShellCompDirective) {
-	},
-	Args: func(cmd *cobra.Command, args []string) error {
-	},
-	ArgAliases:             []string{},
-	BashCompletionFunction: "",
-	Deprecated:             "",
-	Annotations:            map[string]string{},
-	Version:                "",
-	PersistentPreRun: func(cmd *cobra.Command, args []string) {
-	},
-	PersistentPreRunE: func(cmd *cobra.Command, args []string) error {
-	},
-	PreRun: func(cmd *cobra.Command, args []string) {
-	},
-	PreRunE: func(cmd *cobra.Command, args []string) error {
-	},
 	Run: func(cmd *cobra.Command, args []string) {
+
 		fmt.Printf("kbot %s started", appVersion)
-		kbot, err := telebot.NewBot(telebot.Settings{URL: "", Token: TelegramToken, Poller: &telebot.LongPoller{Timeout: 10 * time.Second}})
+
+		if TelegramToken == "" || OpenWeatherAPIKey == "" {
+			log.Fatalf("Missing Telegram token or OpenWeather API key.")
+		}
+
+		kbot, err := telebot.NewBot(telebot.Settings{
+			URL:    "",
+			Token:  TelegramToken,
+			Poller: &telebot.LongPoller{Timeout: 10 * time.Second},
+		})
+
 		if err != nil {
-			log.Fatalf("Please check TELE_TOKEN in config file. %s", err)
+			log.Fatalf("Please check TELE_TOKEN environment variable. %s", err)
 			return
 		}
+
+		// hello
 		kbot.Handle(telebot.OnText, func(m telebot.Context) error {
 			log.Print(m.Message().Payload, m.Text())
 			userID := m.Sender().ID
+
 			userSessions.RLock()
 			session, exists := userSessions.sessions[userID]
 			userSessions.RUnlock()
+
 			if exists && session.AwaitingCity {
-				city := m.Text()
+				city := m.Text() // Get City
 				if city == "" {
 					return m.Send("Please provide a valid city name.")
 				}
@@ -110,6 +83,7 @@ to quickly create a Cobra application.`,
 				userSessions.Unlock()
 				return m.Send(weatherInfo)
 			}
+
 			switch m.Text() {
 			case "/hello":
 				err = m.Send(fmt.Sprintf("Hello I`m kbot %s!", appVersion))
@@ -118,6 +92,8 @@ to quickly create a Cobra application.`,
 			}
 			return err
 		})
+
+		// help
 		kbot.Handle("/help", func(m telebot.Context) error {
 			helpText := `Available commands:
 				/start - Start the bot
@@ -127,10 +103,14 @@ to quickly create a Cobra application.`,
 				/weather - Get weather information`
 			return m.Send(helpText)
 		})
+
+		// time
 		kbot.Handle("/time", func(m telebot.Context) error {
 			currentTime := time.Now().Format("2006-01-02 15:04:05")
 			return m.Send(fmt.Sprintf("Current server time is: %s", currentTime))
 		})
+
+		// weather
 		kbot.Handle("/weather", func(m telebot.Context) error {
 			userID := m.Sender().ID
 			userSessions.Lock()
@@ -138,32 +118,14 @@ to quickly create a Cobra application.`,
 			userSessions.Unlock()
 			return m.Send("Please enter the city name.")
 		})
+
+		// start
 		kbot.Handle("/start", func(m telebot.Context) error {
 			return m.Send("Welcome to kbot! Use /help to see available commands.")
 		})
+
 		kbot.Start()
 	},
-	RunE: func(cmd *cobra.Command, args []string) error {
-	},
-	PostRun: func(cmd *cobra.Command, args []string) {
-	},
-	PostRunE: func(cmd *cobra.Command, args []string) error {
-	},
-	PersistentPostRun: func(cmd *cobra.Command, args []string) {
-	},
-	PersistentPostRunE: func(cmd *cobra.Command, args []string) error {
-	},
-	FParseErrWhitelist:         cobra.FParseErrWhitelist{},
-	CompletionOptions:          cobra.CompletionOptions{},
-	TraverseChildren:           false,
-	Hidden:                     false,
-	SilenceErrors:              false,
-	SilenceUsage:               false,
-	DisableFlagParsing:         false,
-	DisableAutoGenTag:          false,
-	DisableFlagsInUseLine:      false,
-	DisableSuggestions:         false,
-	SuggestionsMinimumDistance: 0,
 }
 
 // OpenWeatherMap API
@@ -211,5 +173,4 @@ func getWeatherInfo(apiKey, city string) (string, error) {
 
 func init() {
 	rootCmd.AddCommand(kbotCmd)
-
 }
