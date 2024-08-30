@@ -10,7 +10,8 @@ image:
   arch: amd64
 secret:
   name: "kbot"
-  env: "TELE_TOKEN"
-  key: "token"
+  env:
+    TELE_TOKEN: "token"
+    openweather_api_key: "openweather_api_key"
 securityContext:
   privileged: true
