@@ -63,7 +63,7 @@ jobs:
       with:
         cmd: yq -i '.image.tag=strenv(VERSION)' helm/values.yaml
     
-        - uses: mikefarah/yq@master
+    - uses: mikefarah/yq@master
         with:
           cmd: yq -i '.version=strenv(VERSION)' helm/Chart.yaml
 
