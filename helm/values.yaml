@@ -11,7 +11,9 @@ image:
 secret:
   name: "kbot"
   env:
-    TELE_TOKEN: "token"
-    openweather_api_key: "openweather"
+    - name: "TELE_TOKEN"
+      key: "token"
+    - name: "openweather_api_key"
+      key: "openweather"
 securityContext:
   privileged: true
