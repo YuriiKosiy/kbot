@@ -3,7 +3,7 @@ module github.com/YuriiKosiy/kbot
 go 1.22.5
 
 require (
-    github.com/hirosassa/zerodriver v0.1.4
+	github.com/hirosassa/zerodriver v0.1.4
 	github.com/spf13/cobra v1.8.1
 	go.opentelemetry.io/otel v1.22.0
 	go.opentelemetry.io/otel/exporters/otlp/otlpmetric/otlpmetricgrpc v0.45.0
