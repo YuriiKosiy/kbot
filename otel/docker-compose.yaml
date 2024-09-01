@@ -3,7 +3,7 @@ services:
 
   # Kbot
   kbot:
-    image: yuriikosiy/kbot:v1.0.15-15b8a2d-linux-amd64
+    image: yuriikosyi/kbot:v1.0.16-73294ee-amd64
     environment:
       - METRICS_HOST=collector:4317
       - TELE_TOKEN=${TELE_TOKEN}
@@ -41,7 +41,7 @@ services:
       - /proc:/host/proc
       - /sys:/host/sys
     ports:
-      - "3001:3001"
+      - "3003:3003"
 
   # Loki
   loki:
