@@ -42,7 +42,9 @@ var (
 // Initialize OpenTelemetry
 func initMetrics(ctx context.Context) {
 	if MetricsHost == "" {
-		log.Fatal("METRICS_HOST не встановлено")
+		// Логуємо попередження, але не припиняємо виконання програми
+		log.Println("Warning: METRICS_HOST не встановлено; пропуск ініціалізації метрик")
+		return
 	}
 
 	exporter, err := otlpmetricgrpc.New(
