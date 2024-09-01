@@ -1,4 +1,4 @@
-DOCKER_VAR_DIR = '/home/george/docker/containers/'
+DOCKER_VAR_DIR = '/var/lib/docker/containers/'
 DOCKER_CONTAINER_CONFIG_FILE = '/config.v2.json'
 DOCKER_CONTAINER_METADATA = {
   ['docker.container_name'] = '\"Name\":\"/?(.-)\"',
