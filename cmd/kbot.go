@@ -1,6 +1,7 @@
 package cmd
 
 import (
+	"context"
 	"encoding/json"
 	"fmt"
 	"io"
@@ -10,17 +11,23 @@ import (
 	"sync"
 	"time"
 
+	"github.com/hirosassa/zerodriver"
 	"github.com/spf13/cobra"
+	"go.opentelemetry.io/otel"
+	"go.opentelemetry.io/otel/exporters/otlp/otlpmetric/otlpmetricgrpc"
+	sdkmetric "go.opentelemetry.io/otel/sdk/metric"
+	"go.opentelemetry.io/otel/sdk/resource"
+	semconv "go.opentelemetry.io/otel/semconv/v1.12.0"
 	telebot "gopkg.in/telebot.v3"
 )
 
-// UserSession
+// UserSession tracks the user's context, such as if they are awaiting city input.
 type UserSession struct {
 	AwaitingCity bool
 }
 
 var (
-	// userSessions
+	// Maps user sessions
 	userSessions = struct {
 		sync.RWMutex
 		sessions map[int64]*UserSession
@@ -29,19 +36,58 @@ var (
 	// Environment variables
 	TelegramToken     = os.Getenv("TELE_TOKEN")
 	OpenWeatherAPIKey = os.Getenv("openweather_api_key")
+	MetricsHost       = os.Getenv("METRICS_HOST") // Assuming this is defined
 )
+
+// Initialize OpenTelemetry
+func initMetrics(ctx context.Context) {
+	if MetricsHost == "" {
+		log.Fatal("METRICS_HOST не встановлено")
+	}
+
+	exporter, err := otlpmetricgrpc.New(
+		ctx,
+		otlpmetricgrpc.WithEndpoint(MetricsHost),
+		otlpmetricgrpc.WithInsecure(),
+	)
+	if err != nil {
+		fmt.Printf("Failed to create exporter: %v\n", err)
+		panic(err)
+	}
+
+	resource := resource.NewWithAttributes(
+		semconv.SchemaURL,
+		semconv.ServiceNameKey.String(fmt.Sprintf("kbot_%s", appVersion)),
+	)
+
+	mp := sdkmetric.NewMeterProvider(
+		sdkmetric.WithResource(resource),
+		sdkmetric.WithReader(
+			sdkmetric.NewPeriodicReader(exporter, sdkmetric.WithInterval(10*time.Second)),
+		),
+	)
+
+	otel.SetMeterProvider(mp)
+}
+
+func pmetrics(ctx context.Context, payload string) {
+	meter := otel.GetMeterProvider().Meter("kbot_commands_counter")
+
+	counter, err := meter.Int64Counter(fmt.Sprintf("kbot_command_%s", payload))
+	if err != nil {
+		fmt.Printf("Error creating counter: %v\n", err)
+		return
+	}
+	counter.Add(ctx, 1)
+}
 
 var kbotCmd = &cobra.Command{
 	Use:     "kbot",
 	Aliases: []string{"start"},
-	Short:   "A brief description of your command",
-	Long: `A longer description that spans multiple lines and likely contains examples
-and usage of using your command. For example:
-
-Cobra is a CLI library for Go that empowers applications.
-This application is a tool to generate the needed files
-to quickly create a Cobra application.`,
+	Short:   "Telegram bot that provides various functionalities.",
+	Long:    "A versatile Telegram bot built with Go, providing weather information, current times in selected cities, and more.",
 	Run: func(cmd *cobra.Command, args []string) {
+		logger := zerodriver.NewProductionLogger()
 
 		fmt.Printf("kbot %s started", appVersion)
 
@@ -56,21 +102,40 @@ to quickly create a Cobra application.`,
 		})
 
 		if err != nil {
-			log.Fatalf("Please check TELE_TOKEN environment variable. %s", err)
+			logger.Fatal().Str("Error", err.Error()).Msg("Please check TELE_TOKEN")
 			return
+		} else {
+			logger.Info().Str("Version", appVersion).Msg("kbot started")
 		}
 
-		// hello
+		menu := &telebot.ReplyMarkup{
+			ReplyKeyboard: [][]telebot.ReplyButton{
+				{{Text: "Hello"}, {Text: "Help"}},
+				{{Text: "Time"}, {Text: "Weather"}},
+				{{Text: "Kyiv"}, {Text: "Boston"}, {Text: "London"}},
+				{{Text: "Vienna"}, {Text: "Tbilisi"}, {Text: "Vancouver"}},
+			},
+		}
+
+		kbot.Handle("/start", func(m telebot.Context) error {
+			logger.Info().Str("Payload", m.Text()).Msg(m.Message().Payload)
+			return m.Send("Welcome to Kbot! Use the menu for available commands.", menu)
+		})
+
 		kbot.Handle(telebot.OnText, func(m telebot.Context) error {
-			log.Print(m.Message().Payload, m.Text())
+			logger.Info().Str("Payload", m.Text()).Msg(m.Message().Payload)
+
+			payload := m.Text()
 			userID := m.Sender().ID
+
+			pmetrics(context.Background(), payload)
 
 			userSessions.RLock()
 			session, exists := userSessions.sessions[userID]
 			userSessions.RUnlock()
 
 			if exists && session.AwaitingCity {
-				city := m.Text() // Get City
+				city := payload
 				if city == "" {
 					return m.Send("Please provide a valid city name.")
 				}
@@ -84,51 +149,36 @@ to quickly create a Cobra application.`,
 				return m.Send(weatherInfo)
 			}
 
-			switch m.Text() {
-			case "/hello":
-				err = m.Send(fmt.Sprintf("Hello I`m kbot %s!", appVersion))
+			switch payload {
+			case "Hello":
+				err := m.Send(fmt.Sprintf("Hi! I'm Kbot %s! I can help you with time and weather.", appVersion))
+				return err
+			case "Help":
+				err := m.Send("Available commands: Time, Weather, or select a city for the current time.")
+				return err
+			case "Time":
+				currentTime := time.Now().Format("2006-01-02 15:04:05")
+				err := m.Send(fmt.Sprintf("Current server time is: %s", currentTime))
+				return err
+			case "Weather":
+				userSessions.Lock()
+				userSessions.sessions[userID] = &UserSession{AwaitingCity: true}
+				userSessions.Unlock()
+				return m.Send("Please enter the city name.")
+			case "Kyiv", "Boston", "London", "Vienna", "Tbilisi", "Vancouver":
+				err := m.Send(fmt.Sprintf("Current time in %s: %s", payload, getTime(payload)))
+				return err
 			default:
-				err = m.Send("Unknown command. Use /help to see available commands.")
+				err := m.Send("Unknown command. Use the menu for available commands.")
+				return err
 			}
-			return err
-		})
-
-		// help
-		kbot.Handle("/help", func(m telebot.Context) error {
-			helpText := `Available commands:
-				/start - Start the bot
-				/help - Show this help message
-				/hello - Say hello
-				/time - Get current server time
-				/weather - Get weather information`
-			return m.Send(helpText)
-		})
-
-		// time
-		kbot.Handle("/time", func(m telebot.Context) error {
-			currentTime := time.Now().Format("2006-01-02 15:04:05")
-			return m.Send(fmt.Sprintf("Current server time is: %s", currentTime))
-		})
-
-		// weather
-		kbot.Handle("/weather", func(m telebot.Context) error {
-			userID := m.Sender().ID
-			userSessions.Lock()
-			userSessions.sessions[userID] = &UserSession{AwaitingCity: true}
-			userSessions.Unlock()
-			return m.Send("Please enter the city name.")
-		})
-
-		// start
-		kbot.Handle("/start", func(m telebot.Context) error {
-			return m.Send("Welcome to kbot! Use /help to see available commands.")
 		})
 
 		kbot.Start()
 	},
 }
 
-// OpenWeatherMap API
+// getWeatherInfo requests weather data from OpenWeather API.
 func getWeatherInfo(apiKey, city string) (string, error) {
 	url := fmt.Sprintf("http://api.openweathermap.org/data/2.5/weather?q=%s&appid=%s&units=metric", city, apiKey)
 
@@ -171,6 +221,36 @@ func getWeatherInfo(apiKey, city string) (string, error) {
 	return weatherInfo, nil
 }
 
+// getTime returns the current time in the specified location.
+func getTime(location string) string {
+	var locName string
+	switch location {
+	case "Kyiv":
+		locName = "Europe/Kiev"
+	case "Boston":
+		locName = "America/New_York"
+	case "London":
+		locName = "Europe/London"
+	case "Vienna":
+		locName = "Europe/Vienna"
+	case "Tbilisi":
+		locName = "Asia/Tbilisi"
+	case "Vancouver":
+		locName = "America/Vancouver"
+	default:
+		return "Invalid location"
+	}
+
+	loc, err := time.LoadLocation(locName)
+	if err != nil {
+		return "Invalid location"
+	}
+	return time.Now().In(loc).Format("15:04:05")
+}
+
 func init() {
+	ctx := context.Background()
+	initMetrics(ctx)
+
 	rootCmd.AddCommand(kbotCmd)
 }
