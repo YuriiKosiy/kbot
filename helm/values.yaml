@@ -17,3 +17,8 @@ secret:
       key: "openweather"
 securityContext:
   privileged: true
+  
+podAnnotations:
+  instrumentation.opentelemetry.io/inject-go: "monitoring/opentelemetry-instrumentation"
+  instrumentation.opentelemetry.io/otel-go-auto-target-exe: "/kbot"
+  sidecar.opentelemetry.io/inject: "monitoring/opentelemetry-sidecar"
