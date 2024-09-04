@@ -47,6 +47,8 @@ docker-compose -f otel/docker-compose.yaml up
 
 Заходимо в Explore та перевіряємо чи є наші логи. Попередньо в бот надсилаємо різні запити.
 
+Логи Loki
 ![Grafana Explore Loki](.img/Explore-Loki-Grafana.png) 
 
+Логи Prometheus
 ![Grafana Explore Prometheus](.img/Explore-Prometheus-Grafana.png)
