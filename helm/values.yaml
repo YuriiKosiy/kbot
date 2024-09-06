@@ -5,7 +5,7 @@
 replicaCount: 1
 image:
   repository: "yuriikosyi"
-  tag: "v1.0.19-0dfd3a2"
+  tag: "v1.0.19-7c960e7"
   os: linux
   arch: amd64
 secret:
@@ -17,7 +17,6 @@ secret:
       key: "openweather"
 securityContext:
   privileged: true
-  
 podAnnotations:
   instrumentation.opentelemetry.io/inject-go: "monitoring/opentelemetry-instrumentation"
   instrumentation.opentelemetry.io/otel-go-auto-target-exe: "/kbot"
