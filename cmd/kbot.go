@@ -167,7 +167,7 @@ var kbotCmd = &cobra.Command{
 				userSessions.sessions[userID] = &UserSession{AwaitingCity: true}
 				userSessions.Unlock()
 				return m.Send("Please enter the city name.")
-			case "Kyiv", "Boston", "London", "Vienna", "Tbilisi", "Vancouver":
+			case "Kyiv", "New_York", "London", "Seattle", "Sydney":
 				err := m.Send(fmt.Sprintf("Current time in %s: %s", payload, getTime(payload)))
 				return err
 			default:
@@ -229,16 +229,14 @@ func getTime(location string) string {
 	switch location {
 	case "Kyiv":
 		locName = "Europe/Kiev"
-	case "Boston":
+	case "New_York":
 		locName = "America/New_York"
 	case "London":
 		locName = "Europe/London"
-	case "Vienna":
-		locName = "Europe/Vienna"
-	case "Tbilisi":
-		locName = "Asia/Tbilisi"
-	case "Vancouver":
-		locName = "America/Vancouver"
+	case "Seattle":
+		locName = "America/Seattle"
+	case "Sydney":
+		locName = "Australia/Sydney"
 	default:
 		return "Invalid location"
 	}
