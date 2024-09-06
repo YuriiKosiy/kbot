@@ -7,6 +7,7 @@ import (
 	"io"
 	"log"
 	"net/http"
+	"net/url"
 	"os"
 	"sync"
 	"time"
@@ -114,8 +115,8 @@ var kbotCmd = &cobra.Command{
 			ReplyKeyboard: [][]telebot.ReplyButton{
 				{{Text: "Hello"}, {Text: "Help"}},
 				{{Text: "Time"}, {Text: "Weather"}},
-				{{Text: "Kyiv"}, {Text: "Boston"}, {Text: "London"}},
-				{{Text: "Vienna"}, {Text: "Tbilisi"}, {Text: "Vancouver"}},
+				{{Text: "Kyiv"}, {Text: "New York"}, {Text: "London"}},
+				{{Text: "Seattle"}, {Text: "Sydney"}},
 			},
 		}
 
@@ -167,11 +168,23 @@ var kbotCmd = &cobra.Command{
 				userSessions.sessions[userID] = &UserSession{AwaitingCity: true}
 				userSessions.Unlock()
 				return m.Send("Please enter the city name.")
-			case "Kyiv", "New_York", "London", "Seattle", "Sydney":
-				err := m.Send(fmt.Sprintf("Current time in %s: %s", payload, getTime(payload)))
+			case "Kyiv", "New York", "London", "Seattle", "Sydney":
+				// GetTime
+				currentTime := getTime(payload)
+
+				// Get Weather Data
+				weatherInfo, err := getWeatherInfo(OpenWeatherAPIKey, payload)
+				if err != nil {
+					weatherInfo = fmt.Sprintf("Failed to get weather information: %s", err)
+				}
+
+				// Time and Weather
+				response := fmt.Sprintf("Current time in %s: %s\n%s", payload, currentTime, weatherInfo)
+				err = m.Send(response)
 				return err
+
 			default:
-				err := m.Send("Unknown command. Use the menu for available commands.")
+				err := m.Send("Unknown command. Please use the menu to select a valid location.")
 				return err
 			}
 		})
@@ -182,6 +195,7 @@ var kbotCmd = &cobra.Command{
 
 // getWeatherInfo requests weather data from OpenWeather API.
 func getWeatherInfo(apiKey, city string) (string, error) {
+	city = url.QueryEscape(city)
 	url := fmt.Sprintf("http://api.openweathermap.org/data/2.5/weather?q=%s&appid=%s&units=metric", city, apiKey)
 
 	log.Printf("Requesting weather data with URL: %s", url)
@@ -229,12 +243,12 @@ func getTime(location string) string {
 	switch location {
 	case "Kyiv":
 		locName = "Europe/Kiev"
-	case "New_York":
+	case "New York":
 		locName = "America/New_York"
 	case "London":
 		locName = "Europe/London"
 	case "Seattle":
-		locName = "America/Seattle"
+		locName = "America/Los_Angeles"
 	case "Sydney":
 		locName = "Australia/Sydney"
 	default:
