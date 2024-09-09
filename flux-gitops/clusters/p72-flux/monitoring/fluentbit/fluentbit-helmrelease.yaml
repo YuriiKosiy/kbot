@@ -1,0 +1,91 @@
+---
+apiVersion: helm.toolkit.fluxcd.io/v2beta1
+kind: HelmRelease
+metadata:
+  name: fluentbit
+  namespace: monitoring
+spec:
+  releaseName: fluent-bit
+  chart:
+    spec:
+      chart: fluent-bit
+      version: 0.46.7
+      sourceRef:
+        kind: HelmRepository
+        name: fluentbit
+        namespace: flux-system
+  interval: 10m0s
+  values:
+    resources:
+      requests:
+        memory: "256Mi"
+        cpu: "100m"
+      limits:
+        memory: "512Mi"
+        cpu: "200m"
+    config:
+      service: |
+        [SERVICE]
+            Flush         10
+            log_level     info
+            Parsers_File  parsers.conf
+            HTTP_Server  On
+            HTTP_Listen  0.0.0.0
+            HTTP_PORT    2020
+      inputs: |
+        [INPUT]
+            Name    tail
+            Tag     kube.*
+            Path    /var/log/containers/*.log
+            multiline.parser              docker, cri
+      filters: |
+        [FILTER]
+            Name             kubernetes
+            Match            kube.*
+            Kube_URL         https://kubernetes.default.svc:443
+            Kube_CA_File     /var/run/secrets/kubernetes.io/serviceaccount/ca.crt
+            Kube_Token_File  /var/run/secrets/kubernetes.io/serviceaccount/token
+            Kube_Tag_Prefix  kube.var.log.containers.
+            K8S-Logging.Parser  On
+            # Merge_Log        On
+            # Merge_Log_Key    log_processed
+        # [FILTER]
+        #     Name                grep
+        #     Match               kube.*
+        #     Regex               kubernetes.namespace_name demo
+      outputs: |
+        # [OUTPUT]
+        #     Name              stdout
+        #     Match             *
+        [OUTPUT]
+            Name                 opentelemetry
+            Match *
+            Host                 otel-collector-collector.monitoring.svc.cluster.local
+            Port                 3030
+            metrics_uri          /v1/metrics
+            logs_uri             /v1/logs
+            traces_uri           /v1/traces
+            Log_response_payload True
+            tls                  off
+            tls.verify           off
+            # add user-defined labels
+            add_label            app fluent-bit
+            add_label            color blue
+        [OUTPUT]
+            name                   loki
+            Host                   loki.monitoring.svc.cluster.local
+            port                   3100
+            match                  *
+            labels                 exporter=fluentbit
+            auto_kubernetes_labels on
+      customParsers: |
+        [PARSER]
+            Name   docker
+            Format json
+            Time_Key time
+            Time_Format %Y-%m-%dT%H:%M:%S.%L
+            Time_Keep On
+        # [PARSER]
+        #     Name    k8s-custom-tag
+        #     Format  regex
+        #     Regex   ^(?<namespace_name>[^_]+)\.(?<container_name>.+)\.(?<pod_name>[a-z0-9](?:[-a-z0-9]*[a-z0-9])?(?:\.[a-z0-9]([-a-z0-9]*[a-z0-9])?)*)\.(?<docker_id>[a-z0-9]{64})-$
