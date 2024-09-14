@@ -1,5 +1,9 @@
 # KBOT Helm Chart Release Guide
 
+This README is available in multiple languages:
+- [English](README.md) - curent page
+- [Українська](README.ua.md)
+
 This guide will walk you through the steps to package and release a new version of the KBOT Helm chart.
 
 ## Prerequisites
